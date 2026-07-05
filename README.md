@@ -1,4 +1,4 @@
-# Teach Leet 🚀
+# Teach Leet
 > A sleek, neomorphic dark-themed Chrome Extension that provides instant LeetCode code reviews and optimization suggestions directly in your browser.
 
 ## Workflow
@@ -17,11 +17,11 @@ graph TD
 ---
 
 ## Features
-* 🌌 **Sleek Neomorphic Dark UI**: Implements a premium, modern dark mode interface with clean micro-interactions.
-* ⚡ **Streaming AI Reviews**: Streams code analysis response line-by-line using Gemini or custom API configurations.
-* 📊 **Time & Space Complexity Badges**: Automatically extracts and displays the Big-O Time & Space complexities of your solution.
-* 🔄 **Alternative Variations**: Displays alternative approaches (Brute, Better, and Optimal) for comparison.
-* 🛠️ **Step-by-step Optimizations**: Outlines concrete steps to transition to the optimal approach, including complete code blocks with copy-to-clipboard actions.
+* **Sleek Neomorphic Dark UI**: Implements a premium, modern dark mode interface with clean micro-interactions.
+* **Streaming AI Reviews**: Streams code analysis response line-by-line using Gemini or custom API configurations.
+* **Time & Space Complexity Badges**: Automatically extracts and displays the Big-O Time & Space complexities of your solution.
+* **Alternative Variations**: Displays alternative approaches (Brute, Better, and Optimal) for comparison.
+* **Step-by-step Optimizations**: Outlines concrete steps to transition to the optimal approach, including complete code blocks with copy-to-clipboard actions.
 
 ---
 
@@ -72,4 +72,4 @@ graph TD
 ```
 
 ---
-*Created with ❤️ by [Amartya Raj](https://github.com/Mr-Smarty-331/)*
+*Created by [Amartya Raj](https://github.com/Mr-Smarty-331/)*
