@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeetCode Analyzer Settings</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <span class="logo-text">LeetCode <span class="highlight">Analysis</span></span>
+      </div>
+      <p class="subtitle">Analyze accepted solutions instantly with AI</p>
+    </header>
+
+    <main>
+      <form id="settings-form">
+        <!-- Provider Select -->
+        <div class="form-group">
+          <label for="provider">AI Provider</label>
+          <div class="select-wrapper">
+            <select id="provider">
+              <option value="gemini">Google Gemini</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic Claude</option>
+              <option value="groq">Groq</option>
+              <option value="custom">Custom (Ollama / Local)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- API Key Input (Hidden for custom if not required, but shown by default) -->
+        <div class="form-group" id="key-group">
+          <label for="api-key" id="api-key-label">API Key</label>
+          <input type="password" id="api-key" placeholder="Enter your API key" required />
+        </div>
+
+        <!-- Custom Base URL (Only visible for Custom provider) -->
+        <div class="form-group hidden" id="url-group">
+          <label for="custom-url">Base URL</label>
+          <input type="url" id="custom-url" placeholder="e.g. http://localhost:11434/v1" />
+        </div>
+
+        <!-- Model Selection -->
+        <div class="form-group">
+          <label for="model">Model Name</label>
+          <input type="text" id="model" placeholder="e.g. gemini-1.5-flash" required />
+          <span class="hint" id="model-hint">Default: gemini-1.5-flash</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions">
+          <button type="submit" id="save-btn" class="btn btn-primary">Save Settings</button>
+          <button type="button" id="test-btn" class="btn btn-secondary">Test Connection</button>
+        </div>
+      </form>
+
+      <div id="status-message" class="status-msg hidden"></div>
+    </main>
+
+    <footer>
+      <p>Secure: Keys are stored strictly on this device.</p>
+      <p style="margin-top: 6px; opacity: 0.6; font-size: 9px; letter-spacing: 0.3px;">
+        Created by <a href="https://github.com/Mr-Smarty-331/" target="_blank" class="credit-link">Amartya Raj</a>
+      </p>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
