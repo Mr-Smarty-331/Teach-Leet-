@@ -143,6 +143,60 @@
   box-shadow: inset 2px 2px 4px #101113, inset -2px -2px 4px #2c2d31;
 }
 
+.leetcode-ai-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.leetcode-ai-drawer-reload {
+  background-color: #1e1f22;
+  border: none;
+  color: #38bdf8;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 6px #101113, -3px -3px 6px #2c2d31;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.leetcode-ai-drawer-reload:hover {
+  color: #7dd3fc;
+  box-shadow: 4px 4px 8px #101113, -4px -4px 8px #2c2d31;
+  transform: translateY(-1px);
+}
+
+.leetcode-ai-drawer-reload:active {
+  box-shadow: inset 2px 2px 4px #101113, inset -2px -2px 4px #2c2d31;
+  transform: translateY(0);
+}
+
+.leetcode-ai-drawer-reload svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+@keyframes leetcode-ai-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.leetcode-ai-drawer-reload.loading svg {
+  animation: leetcode-ai-spin 1s linear infinite;
+}
+
+.leetcode-ai-drawer-reload.loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* Tabs Navigation Bar (Neomorphic Button Group) */
 .leetcode-ai-tabs {
   display: flex;

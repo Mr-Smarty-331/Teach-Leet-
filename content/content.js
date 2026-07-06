@@ -29,7 +29,14 @@ function injectDrawer() {
     <div id="leetcode-ai-drawer" class="leetcode-ai-drawer">
       <div class="leetcode-ai-drawer-header">
         <h2>LeetCode <span class="accent">Code Review</span></h2>
-        <button id="leetcode-ai-close-btn" class="leetcode-ai-drawer-close">&times;</button>
+        <div class="leetcode-ai-header-actions">
+          <button id="leetcode-ai-reload-btn" class="leetcode-ai-drawer-reload" title="Refresh Analysis">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button id="leetcode-ai-close-btn" class="leetcode-ai-drawer-close">&times;</button>
+        </div>
       </div>
       <div class="leetcode-ai-tabs">
         <button class="leetcode-ai-tab-btn active" data-tab="1">Complexity</button>
@@ -56,6 +63,11 @@ function injectDrawer() {
 
   // Close button action
   document.getElementById('leetcode-ai-close-btn').addEventListener('click', closeDrawer);
+
+  // Reload button action
+  document.getElementById('leetcode-ai-reload-btn').addEventListener('click', () => {
+    triggerAnalysis(true);
+  });
 
   // Tab switching click action
   const tabButtons = drawerContainer.querySelectorAll('.leetcode-ai-tab-btn');
@@ -158,69 +170,134 @@ function detectAndInjectInlineBtn() {
   }
 }
 
+// Caching helper functions
+function getCacheKey(problemTitle) {
+  return "leetcode_analysis_" + problemTitle.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+}
+
+function saveToCache(problemTitle, code, result) {
+  const key = getCacheKey(problemTitle);
+  const cacheData = {
+    code: code,
+    result: result,
+    timestamp: Date.now()
+  };
+  chrome.storage.local.set({ [key]: cacheData });
+}
+
+function getFromCache(problemTitle, callback) {
+  const key = getCacheKey(problemTitle);
+  chrome.storage.local.get([key], (res) => {
+    const cached = res[key];
+    if (cached && (Date.now() - cached.timestamp < 5 * 60 * 1000)) {
+      callback(cached);
+    } else {
+      if (cached) {
+        chrome.storage.local.remove([key]);
+      }
+      callback(null);
+    }
+  });
+}
+
 // 4. Trigger the submission analysis
-async function triggerAnalysis() {
+async function triggerAnalysis(forceRefresh = false) {
   const code = scrapeSubmittedCode() || '';
   const problemTitle = getProblemTitle();
   const language = detectLanguage();
 
   openDrawer();
 
-  // If we already have a cached analysis for this exact code, load it instantly
-  if (lastAnalyzedCode === code && lastAnalysisResult) {
-    showCachedResult();
-    return;
-  }
-
-  // Clear previous output and show loading spinner
-  const contentDiv = document.getElementById('leetcode-ai-content');
-  const loadingDiv = document.getElementById('leetcode-ai-loading');
-  
-  // Clear tab contents
-  document.getElementById('leetcode-ai-tab-panel-1').innerHTML = '';
-  document.getElementById('leetcode-ai-tab-panel-2').innerHTML = '';
-  document.getElementById('leetcode-ai-tab-panel-3').innerHTML = '';
-  
-  contentDiv.classList.add('hidden');
-  loadingDiv.classList.remove('hidden');
-
-  lastAnalysisResult = '';
-  lastAnalyzedCode = code;
-  tabContents = { '1': '', '2': '', '3': '' };
-  
-  // Reset to default tab
-  switchTab('1');
-
-  // Disconnect existing streaming ports if any
-  if (currentPort) {
-    currentPort.disconnect();
-  }
-
-  // Establish connection to service worker
-  currentPort = chrome.runtime.connect({ name: 'leetcode-analysis-stream' });
-
-  currentPort.onMessage.addListener((msg) => {
-    if (msg.type === 'chunk') {
-      loadingDiv.classList.add('hidden');
-      contentDiv.classList.remove('hidden');
-      
-      lastAnalysisResult += msg.text;
-      updateDrawerContent(lastAnalysisResult);
-      scrollToBottomIfNeeded();
-    } else if (msg.type === 'done') {
-      currentPort.disconnect();
-      currentPort = null;
-    } else if (msg.type === 'error') {
-      showError(msg.error);
-      currentPort.disconnect();
-      currentPort = null;
+  const startNewAnalysis = () => {
+    // Disable reload button during load
+    const reloadBtn = document.getElementById('leetcode-ai-reload-btn');
+    if (reloadBtn) {
+      reloadBtn.classList.add('loading');
+      reloadBtn.disabled = true;
     }
-  });
 
-  currentPort.postMessage({
-    type: 'START_ANALYSIS',
-    payload: { problemTitle, code, language }
-  });
+    // Clear previous output and show loading spinner
+    const contentDiv = document.getElementById('leetcode-ai-content');
+    const loadingDiv = document.getElementById('leetcode-ai-loading');
+    
+    // Clear tab contents
+    document.getElementById('leetcode-ai-tab-panel-1').innerHTML = '';
+    document.getElementById('leetcode-ai-tab-panel-2').innerHTML = '';
+    document.getElementById('leetcode-ai-tab-panel-3').innerHTML = '';
+    
+    contentDiv.classList.add('hidden');
+    loadingDiv.classList.remove('hidden');
+
+    lastAnalysisResult = '';
+    lastAnalyzedCode = code;
+    tabContents = { '1': '', '2': '', '3': '' };
+    
+    // Reset to default tab
+    switchTab('1');
+
+    // Disconnect existing streaming ports if any
+    if (currentPort) {
+      currentPort.disconnect();
+    }
+
+    // Establish connection to service worker
+    currentPort = chrome.runtime.connect({ name: 'leetcode-analysis-stream' });
+
+    currentPort.onMessage.addListener((msg) => {
+      if (msg.type === 'chunk') {
+        loadingDiv.classList.add('hidden');
+        contentDiv.classList.remove('hidden');
+        
+        lastAnalysisResult += msg.text;
+        updateDrawerContent(lastAnalysisResult);
+        scrollToBottomIfNeeded();
+      } else if (msg.type === 'done') {
+        saveToCache(problemTitle, code, lastAnalysisResult);
+        if (reloadBtn) {
+          reloadBtn.classList.remove('loading');
+          reloadBtn.disabled = false;
+        }
+        currentPort.disconnect();
+        currentPort = null;
+      } else if (msg.type === 'error') {
+        showError(msg.error);
+        if (reloadBtn) {
+          reloadBtn.classList.remove('loading');
+          reloadBtn.disabled = false;
+        }
+        currentPort.disconnect();
+        currentPort = null;
+      }
+    });
+
+    currentPort.postMessage({
+      type: 'START_ANALYSIS',
+      payload: { problemTitle, code, language }
+    });
+  };
+
+  if (forceRefresh) {
+    const key = getCacheKey(problemTitle);
+    chrome.storage.local.remove([key], () => {
+      startNewAnalysis();
+    });
+  } else {
+    // If memory cache matches exactly, return instantly
+    if (lastAnalyzedCode === code && lastAnalysisResult) {
+      showCachedResult();
+      return;
+    }
+
+    getFromCache(problemTitle, (cached) => {
+      if (cached && cached.code === code) {
+        lastAnalysisResult = cached.result;
+        lastAnalyzedCode = cached.code;
+        showCachedResult();
+      } else {
+        startNewAnalysis();
+      }
+    });
+  }
 }
 
 // 5. DOM Scraping Helpers
