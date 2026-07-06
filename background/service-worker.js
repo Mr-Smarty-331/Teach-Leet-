@@ -53,7 +53,9 @@ Clearly state and highlight which approach represents the **Most Optimal Approac
 Outline a step-by-step guideline on how to transition from the current implementation to the most optimal approach. Provide a clean, optimized code snippet demonstrating these steps in the EXACT same programming language as the submitted code (${msg.payload.language}) with helpful comments.
 
 Formatting Constraint:
-Do NOT use sub-bullets, nested lists (like +, *, or indentation), or nested bullet points. Every list item or bullet point must be a single, flat, self-contained list item containing all of its description inline. E.g. format as a flat list: \`- **Title**: Explanations here...\`.`;
+- Do NOT use sub-bullets, nested lists (like +, *, or indentation), or nested bullet points. Every list item or bullet point must be a single, flat, self-contained list item containing all of its description inline. E.g. format as a flat list: \`- **Title**: Explanations here...\`.
+- Do NOT use LaTeX mathematical formatting, delimiters (e.g. do NOT use $ or $$), or LaTeX-specific math backslash keywords/symbols (e.g. do NOT use \\log, \\cdot, \\approx, \\le, \\ge, \\times).
+- Always represent all Big-O complexities and mathematical symbols in plain standard text (e.g. write "O(N^3 log K)" or "log(K)" or "O(N log N)" using clean alphanumeric characters and normal brackets).`;
 
           await streamAIResponse(provider, apiKey, customUrl, model, systemPrompt, userPrompt, port);
         } catch (err) {
