@@ -50,7 +50,7 @@ Detail the different approaches possible for this problem:
 Clearly state and highlight which approach represents the **Most Optimal Approach**.
 
 ### 3. Steps to Optimizing the Current Code
-Outline a step-by-step guideline on how to transition from the current implementation to the most optimal approach. Provide a clean, optimized code snippet demonstrating these steps in the EXACT same programming language as the submitted code (${msg.payload.language}) with helpful comments.
+Outline a step-by-step guideline on how to transition from the current implementation to the most optimal approach. Focus strictly on explaining the logical algorithmic steps, data structures, and methodology to optimize. Do NOT write or provide any code snippets, template code, or programming block code in this section.
 
 Formatting Constraint:
 - Do NOT use sub-bullets, nested lists (like +, *, or indentation), or nested bullet points. Every list item or bullet point must be a single, flat, self-contained list item containing all of its description inline. E.g. format as a flat list: \`- **Title**: Explanations here...\`.
@@ -183,7 +183,10 @@ async function streamAIResponse(provider, apiKey, customUrl, model, systemPrompt
       body: JSON.stringify({
         contents: [
           { role: 'user', parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }
-        ]
+        ],
+        generationConfig: {
+          maxOutputTokens: 4096
+        }
       })
     });
 
@@ -259,6 +262,7 @@ async function streamAIResponse(provider, apiKey, customUrl, model, systemPrompt
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
+        max_tokens: 4096,
         stream: true
       })
     });

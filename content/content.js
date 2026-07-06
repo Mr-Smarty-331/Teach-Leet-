@@ -170,13 +170,15 @@ function detectAndInjectInlineBtn() {
   }
 }
 
-// Caching helper functions
-function getCacheKey(problemTitle) {
-  return "leetcode_analysis_" + problemTitle.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+// Caching helper functions using URL-based keys
+function getCacheKey() {
+  const match = window.location.pathname.match(/\/problems\/([^/]+)/);
+  const slug = (match && match[1]) ? match[1] : 'unknown_problem';
+  return "leetcode_analysis_" + slug;
 }
 
-function saveToCache(problemTitle, code, result) {
-  const key = getCacheKey(problemTitle);
+function saveToCache(code, result) {
+  const key = getCacheKey();
   const cacheData = {
     code: code,
     result: result,
@@ -185,8 +187,8 @@ function saveToCache(problemTitle, code, result) {
   chrome.storage.local.set({ [key]: cacheData });
 }
 
-function getFromCache(problemTitle, callback) {
-  const key = getCacheKey(problemTitle);
+function getFromCache(callback) {
+  const key = getCacheKey();
   chrome.storage.local.get([key], (res) => {
     const cached = res[key];
     if (cached && (Date.now() - cached.timestamp < 5 * 60 * 1000)) {
@@ -252,7 +254,7 @@ async function triggerAnalysis(forceRefresh = false) {
         updateDrawerContent(lastAnalysisResult);
         scrollToBottomIfNeeded();
       } else if (msg.type === 'done') {
-        saveToCache(problemTitle, code, lastAnalysisResult);
+        saveToCache(code, lastAnalysisResult);
         if (reloadBtn) {
           reloadBtn.classList.remove('loading');
           reloadBtn.disabled = false;
@@ -277,19 +279,19 @@ async function triggerAnalysis(forceRefresh = false) {
   };
 
   if (forceRefresh) {
-    const key = getCacheKey(problemTitle);
+    const key = getCacheKey();
     chrome.storage.local.remove([key], () => {
       startNewAnalysis();
     });
   } else {
     // If memory cache matches exactly, return instantly
-    if (lastAnalyzedCode === code && lastAnalysisResult) {
+    if (lastAnalyzedCode && normalizeCode(lastAnalyzedCode) === normalizeCode(code) && lastAnalysisResult) {
       showCachedResult();
       return;
     }
 
-    getFromCache(problemTitle, (cached) => {
-      if (cached && cached.code === code) {
+    getFromCache((cached) => {
+      if (cached && normalizeCode(cached.code) === normalizeCode(code)) {
         lastAnalysisResult = cached.result;
         lastAnalyzedCode = cached.code;
         showCachedResult();
@@ -300,12 +302,28 @@ async function triggerAnalysis(forceRefresh = false) {
   }
 }
 
+// Normalized code comparator to bypass space/newline differences in caches
+function normalizeCode(codeText) {
+  if (!codeText) return '';
+  return codeText.replace(/\s+/g, '');
+}
+
 // 5. DOM Scraping Helpers
 function getProblemTitle() {
+  // Extract slug from URL pathname: e.g. /problems/two-sum/
+  const match = window.location.pathname.match(/\/problems\/([^/]+)/);
+  if (match && match[1]) {
+    const slug = match[1];
+    return slug
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
   // Fallback 1: Extract from document title
   if (document.title) {
     const titleParts = document.title.split(' - LeetCode');
-    if (titleParts.length > 0 && titleParts[0]) {
+    if (titleParts.length > 0 && titleParts[0] && titleParts[0].trim() !== 'Submission Detail') {
       return titleParts[0].trim();
     }
   }
@@ -587,6 +605,12 @@ function parseMarkdown(md) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+
+  // Handle open fenced code blocks during streaming
+  const backtickCount = (html.match(/```/g) || []).length;
+  if (backtickCount % 2 !== 0) {
+    html += '\n```';
+  }
 
   // Fenced Code blocks: ```lang ... ```
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
